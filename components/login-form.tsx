@@ -53,8 +53,9 @@ export function LoginForm({
       // Let's redirect to /dashboard to handle role choosing.
       router.push("/dashboard")
       router.refresh()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message)
     } finally {
       setIsLoading(false)
     }

@@ -10,7 +10,15 @@ import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [session, setSession] = React.useState<any>(null);
+  const [session, setSession] = React.useState<{
+    id: number;
+    username: string;
+    email: string;
+    roles: string[];
+    activeRole: string | null;
+    walletBalance: number;
+    hasStore: boolean;
+  } | null>(null);
   const router = useRouter();
 
   React.useEffect(() => {
@@ -39,7 +47,7 @@ const Header = () => {
     });
     if (res.ok) {
       const data = await res.json();
-      setSession((prev: any) => ({ ...prev, activeRole: data.activeRole }));
+      setSession((prev) => prev ? { ...prev, activeRole: data.activeRole } : null);
       router.push("/dashboard");
       router.refresh();
     }

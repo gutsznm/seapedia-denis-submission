@@ -77,8 +77,9 @@ export function RegisterForm({
       }
 
       router.push("/auth/login")
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message)
     } finally {
       setIsLoading(false)
     }

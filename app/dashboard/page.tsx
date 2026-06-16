@@ -6,9 +6,19 @@ import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+interface UserSession {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
+  activeRole: string | null;
+  walletBalance: number;
+  hasStore: boolean;
+}
+
 export default function Dashboard() {
   const router = useRouter();
-  const [session, setSession] = React.useState<any>(null);
+  const [session, setSession] = React.useState<UserSession | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -33,7 +43,7 @@ export default function Dashboard() {
     });
     if (res.ok) {
       const data = await res.json();
-      setSession((prev: any) => ({ ...prev, activeRole: data.activeRole }));
+      setSession((prev) => prev ? { ...prev, activeRole: data.activeRole } : null);
       router.refresh();
     }
   };

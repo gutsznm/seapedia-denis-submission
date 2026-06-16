@@ -1,21 +1,29 @@
 "use client";
 
 import * as React from "react";
-import { Star, MessageSquare, Plus } from "lucide-react";
+import { Star, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+interface AppReview {
+  id: number;
+  name: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function AppReviews() {
-  const [reviews, setReviews] = React.useState<any[]>([]);
+  const [reviews, setReviews] = React.useState<AppReview[]>([]);
   const [name, setName] = React.useState("");
   const [rating, setRating] = React.useState(5);
   const [comment, setComment] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [msg, setMsg] = React.useState("");
 
-  const fetchReviews = async () => {
+  const fetchReviews = React.useCallback(async () => {
     try {
       const res = await fetch("/api/reviews");
       if (res.ok) {
@@ -23,11 +31,12 @@ export default function AppReviews() {
         setReviews(data);
       }
     } catch {}
-  };
+  }, []);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReviews();
-  }, []);
+  }, [fetchReviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

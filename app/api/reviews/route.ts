@@ -7,8 +7,9 @@ export async function GET() {
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(reviews);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(review, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
