@@ -2,6 +2,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 import {
   Field,
   FieldDescription,
@@ -34,10 +35,57 @@ export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const router = useRouter()
   const [value, setValue] = React.useState<string[]>([])
   const [showPassword, setShowPassword] = React.useState(false)
+  const [error, setError] = React.useState("")
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const username = formData.get("username") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!username || !email || !password) {
+      setError("Please fill in all fields.")
+      setIsLoading(false)
+      return
+    }
+
+    if (value.length === 0) {
+      setError("Please choose at least one role.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const mappedRoles = value.map(r => r.toUpperCase())
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password, roles: mappedRoles })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong")
+      }
+
+      router.push("/auth/login")
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
@@ -45,19 +93,25 @@ export function RegisterForm({
             Fill in the form below to create your account
           </p>
         </div>
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950/20 dark:border-red-900/50">
+            {error}
+          </div>
+        )}
         <Field>
           <FieldLabel htmlFor="username">Username</FieldLabel>
-          <Input id="name" type="text" placeholder="username" required />
+          <Input id="username" name="username" type="text" placeholder="username" required />
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="example@seapedia.com" required />
+          <Input id="email" name="email" type="email" placeholder="example@seapedia.com" required />
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <div className="relative w-full">
             <Input 
               id="password" 
+              name="password"
               type={showPassword ? "text" : "password"}
               required 
               className="pr-10" 
@@ -104,7 +158,9 @@ export function RegisterForm({
           </Combobox>
         </Field>
         <Field>
-          <Button type="submit">Create Account</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Creating Account..." : "Create Account"}
+          </Button>
         </Field>
         <Field>
           <FieldDescription className="px-6 text-center">

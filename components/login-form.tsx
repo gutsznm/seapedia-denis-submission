@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 import {
   Field,
   FieldDescription,
@@ -16,9 +17,51 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-    const [showPassword, setShowPassword] = React.useState(false)
+  const router = useRouter()
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [error, setError] = React.useState("")
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!email || !password) {
+      setError("Please fill in all fields.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong")
+      }
+
+      // If activeRole is already decided, redirect directly. Else, show role chooser (which we can route to /dashboard or handle).
+      // Let's redirect to /dashboard to handle role choosing.
+      router.push("/dashboard")
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
@@ -26,10 +69,16 @@ export function LoginForm({
             Enter your email below to login to your account
           </p>
         </div>
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950/20 dark:border-red-900/50">
+            {error}
+          </div>
+        )}
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="example@seapedia.com"
             required
@@ -41,6 +90,7 @@ export function LoginForm({
             <div className="relative w-full">
             <Input 
                 id="password" 
+                name="password"
                 type={showPassword ? "text" : "password"}
                 required 
                 className="pr-10" 
@@ -59,7 +109,9 @@ export function LoginForm({
             </div>
         </Field>
         <Field>
-          <Button type="submit">Login</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
         </Field>
         <Field>
           <FieldDescription className="text-center">

@@ -4,7 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -13,14 +13,19 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  email    String @unique
-  password String
-
+  id         Int       @id @default(autoincrement())
+  username   String    @unique
+  email      String    @unique
+  password   String
   activeRole String?
+  roles      Role[]
 
-  roles Role[]
+  store      Store?
+  wallet     Wallet?
+  addresses  Address[]
+  cart       Cart?
+  orders     Order[]
+  deliveries Delivery[]
 }
 
 model Role {
@@ -28,6 +33,142 @@ model Role {
   name  String @unique
   users User[]
 }
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  name      String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  userId   Int       @unique
+  user     User      @relation(fields: [userId], references: [id])
+  products Product[]
+}
+
+model Product {
+  id            Int         @id @default(autoincrement())
+  name          String
+  description   String
+  price         Float
+  discountPrice Float?
+  stock         Int
+  image         String
+  storeId       Int
+  store         Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+}
+
+model Wallet {
+  id           Int                 @id @default(autoincrement())
+  balance      Float               @default(0)
+  userId       Int                 @unique
+  user         User                @relation(fields: [userId], references: [id])
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        Int      @id @default(autoincrement())
+  walletId  Int
+  wallet    Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount    Float
+  type      String   // TOPUP, PAYMENT, REFUND, REVERSAL
+  createdAt DateTime @default(now())
+}
+
+model Address {
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressText String
+}
+
+model Cart {
+  id      Int        @id @default(autoincrement())
+  userId  Int        @unique
+  user    User       @relation(fields: [userId], references: [id])
+  storeId Int?
+  items   CartItem[]
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  cartId    Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+}
+
+model Order {
+  id             Int                  @id @default(autoincrement())
+  buyerId        Int
+  buyer          User                 @relation(fields: [buyerId], references: [id])
+  storeId        Int
+  subtotal       Float
+  discountCode   String?
+  discountAmount Float                @default(0)
+  deliveryFee    Float
+  taxAmount      Float
+  totalAmount    Float
+  status         String               // Sedang Dikemas, Menunggu Pengirim, Sedang Dikirim, Pesanan Selesai, Dikembalikan
+  deliveryMethod String               // Instant, Next Day, Regular
+  driverId       Int?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  delivery       Delivery?
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model OrderStatusHistory {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  timestamp DateTime @default(now())
+}
+
+model Voucher {
+  id             Int      @id @default(autoincrement())
+  code           String   @unique
+  discount       Float
+  expiryDate     DateTime
+  maxUsage       Int
+  remainingUsage Int
+}
+
+model Promo {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique
+  discount   Float
+  expiryDate DateTime
+}
+
+model Delivery {
+  id       Int    @id @default(autoincrement())
+  orderId  Int    @unique
+  order    Order  @relation(fields: [orderId], references: [id])
+  driverId Int
+  driver   User   @relation(fields: [driverId], references: [id])
+  status   String // Menunggu Pengirim, Sedang Dikirim, Pesanan Selesai, Dikembalikan
+}
+
 
 
 
