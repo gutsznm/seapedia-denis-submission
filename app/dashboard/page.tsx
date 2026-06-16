@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import StoreManagement from "@/components/store-management";
 import ProductManagement from "@/components/product-management";
+import SellerOrders from "@/components/seller-orders";
+import BuyerWallet from "@/components/buyer-wallet";
+import BuyerAddress from "@/components/buyer-address";
+import BuyerCart from "@/components/buyer-cart";
+import BuyerCheckout from "@/components/buyer-checkout";
+import BuyerOrders from "@/components/buyer-orders";
 
 interface UserSession {
   id: number;
@@ -22,6 +28,8 @@ export default function Dashboard() {
   const router = useRouter();
   const [session, setSession] = React.useState<UserSession | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [activeTab, setActiveTab] = React.useState("wallet"); // wallet, address, cart, checkout, orders
+  const [sellerTab, setSellerTab] = React.useState("products"); // products, orders
 
   React.useEffect(() => {
     fetch("/api/auth/session")
@@ -107,27 +115,33 @@ export default function Dashboard() {
 
             {/* Dashboard Shells based on Active Role */}
             {session.activeRole === "BUYER" && (
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold">Wallet Balance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-extrabold text-blue-600">
-                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(session.walletBalance)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm md:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold">Buyer Panel Placeholder</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Wallet management, address selection, cart checkout and order tracking will be active in Level 3.
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                <div className="flex border-b overflow-x-auto gap-4">
+                  {[
+                    { id: "wallet", label: "Dompet" },
+                    { id: "address", label: "Alamat" },
+                    { id: "cart", label: "Keranjang" },
+                    { id: "orders", label: "Pesanan Saya" }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`pb-2.5 text-sm font-semibold border-b-2 px-1 focus:outline-none transition-all ${activeTab === tab.id || (activeTab === "checkout" && tab.id === "cart") ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === "wallet" && <BuyerWallet />}
+                {activeTab === "address" && <BuyerAddress />}
+                {activeTab === "cart" && (
+                  <BuyerCart onCheckoutNavigate={() => setActiveTab("checkout")} />
+                )}
+                {activeTab === "checkout" && (
+                  <BuyerCheckout onCheckoutSuccess={() => setActiveTab("orders")} />
+                )}
+                {activeTab === "orders" && <BuyerOrders />}
               </div>
             )}
 
@@ -142,7 +156,25 @@ export default function Dashboard() {
                       });
                   }} />
                 ) : (
-                  <ProductManagement />
+                  <>
+                    <div className="flex border-b overflow-x-auto gap-4">
+                      {[
+                        { id: "products", label: "Kelola Produk" },
+                        { id: "orders", label: "Pesanan Masuk" }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setSellerTab(tab.id)}
+                          className={`pb-2.5 text-sm font-semibold border-b-2 px-1 focus:outline-none transition-all ${sellerTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {sellerTab === "products" && <ProductManagement />}
+                    {sellerTab === "orders" && <SellerOrders />}
+                  </>
                 )}
               </div>
             )}

@@ -97,7 +97,38 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Tombol Tambah ke Keranjang */}
-        <Button size="icon" className="h-7 w-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-transform active:scale-95">
+        <Button 
+          size="icon" 
+          className="h-7 w-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-transform active:scale-95"
+          onClick={async () => {
+            try {
+              const res = await fetch("/api/buyer/cart", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId: product.id, quantity: 1 })
+              });
+              const data = await res.json();
+              if (res.status === 409) {
+                if (confirm(`${data.message}\nApakah Anda ingin mengosongkan keranjang sekarang?`)) {
+                  await fetch("/api/buyer/cart", { method: "DELETE" });
+                  // Retry add to cart
+                  await fetch("/api/buyer/cart", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId: product.id, quantity: 1 })
+                  });
+                  alert("Barang berhasil ditambahkan ke keranjang!");
+                }
+              } else if (!res.ok) {
+                alert(data.error || "Gagal menambahkan barang ke keranjang. Pastikan Anda sudah login sebagai BUYER.");
+              } else {
+                alert("Barang berhasil ditambahkan ke keranjang!");
+              }
+            } catch {
+              alert("Terjadi kesalahan.");
+            }
+          }}
+        >
           <ShoppingCart className="h-3.5 w-3.5" />
         </Button>
       </CardFooter>
