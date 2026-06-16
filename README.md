@@ -45,10 +45,10 @@ Step by step:
 ## Demo Account
 ADMIN
 
-    username : admin
+    email : admin@seapedia.com
     password : password123
 
 USER (MULTI-ROLE)
 
-    username : user
+    email : user@seapedia.com
     password : password123

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import StoreManagement from "@/components/store-management";
+import ProductManagement from "@/components/product-management";
 
 interface UserSession {
   id: number;
@@ -130,27 +132,18 @@ export default function Dashboard() {
             )}
 
             {session.activeRole === "SELLER" && (
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold">Store Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-semibold">
-                      {session.hasStore ? "Store Configured" : "No Store Configured"}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm md:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold">Seller Panel Placeholder</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Store configuration, product listings CRUD and order processing will be active in Level 2.
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {!session.hasStore ? (
+                  <StoreManagement onStoreCreated={() => {
+                    fetch("/api/auth/session")
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.user) setSession(data.user);
+                      });
+                  }} />
+                ) : (
+                  <ProductManagement />
+                )}
               </div>
             )}
 
