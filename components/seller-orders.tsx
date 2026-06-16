@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface OrderItem {
   id: number;
@@ -32,6 +33,7 @@ interface Order {
 
 export default function SellerOrders() {
   const [orders, setOrders] = React.useState<Order[]>([]);
+  const [msg, setMsg] = React.useState("");
 
   const fetchOrders = React.useCallback(async () => {
     try {
@@ -48,9 +50,34 @@ export default function SellerOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
+  const handleProcessOrder = async (orderId: number) => {
+    setMsg("");
+    try {
+      const res = await fetch(`/api/seller/orders/${orderId}/process`, {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMsg(`Pesanan #${orderId} berhasil diproses!`);
+        fetchOrders();
+      } else {
+        setMsg(data.error || "Gagal memproses pesanan.");
+      }
+    } catch {
+      setMsg("Terjadi kesalahan.");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-bold text-slate-900">Daftar Pesanan Masuk</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-bold text-slate-900">Daftar Pesanan Masuk</h3>
+      </div>
+      {msg && (
+        <div className={`p-3 text-xs rounded border ${msg.includes("berhasil") ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+          {msg}
+        </div>
+      )}
       {orders.length === 0 ? (
         <div className="p-8 border border-dashed rounded-xl text-center bg-slate-50">
           <p className="text-sm text-muted-foreground">Belum ada pesanan masuk.</p>
@@ -68,6 +95,11 @@ export default function SellerOrders() {
                   <span className="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
                     {order.status}
                   </span>
+                  {order.status === "Sedang Dikemas" && (
+                    <Button size="sm" className="text-xs h-8 font-bold" onClick={() => handleProcessOrder(order.id)}>
+                      Proses & Kirim
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">

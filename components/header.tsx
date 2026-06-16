@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -19,7 +18,6 @@ const Header = () => {
     walletBalance: number;
     hasStore: boolean;
   } | null>(null);
-  const router = useRouter();
 
   React.useEffect(() => {
     fetch("/api/auth/session")
@@ -35,8 +33,7 @@ const Header = () => {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setSession(null);
-    router.push("/");
-    router.refresh();
+    window.location.href = "/";
   };
 
   const handleRoleChange = async (role: string) => {
@@ -46,16 +43,15 @@ const Header = () => {
       body: JSON.stringify({ activeRole: role }),
     });
     if (res.ok) {
-      const data = await res.json();
-      setSession((prev) => prev ? { ...prev, activeRole: data.activeRole } : null);
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     }
   };
 
   return (
     <nav className="w-full border-b bg-background sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 md:h-16 flex items-center justify-between gap-2 sm:gap-4 md:gap-6">
+        
+        {/* LOGO */}
         <div className="flex-shrink-0 flex items-center md:pl-5">
           <Link href="/">
             <Image 
@@ -68,22 +64,29 @@ const Header = () => {
             />
           </Link>
         </div>
-        <div className="relative flex-1 max-w-xl mx-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="Cari barang di sini..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 h-12 text-sm w-full"
-          />
-        </div>
+
+        {!session && (
+          <div className="relative flex-1 max-w-xl mx-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Cari barang di sini..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 h-12 text-sm w-full"
+            />
+          </div>
+        )}
+
+        {session && <div className="flex-1" />}
+
         <div className="flex items-center gap-3 flex-shrink-0 md:pr-2">
           {session ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground hidden md:inline">
                 Hi, <span className="font-semibold text-foreground">{session.username}</span>
               </span>
+              
               {session.roles && session.roles.length > 0 && (
                 <div className="flex items-center gap-1.5 bg-muted p-1 rounded-lg">
                   <span className="text-xs font-semibold px-2">Role:</span>
@@ -99,9 +102,11 @@ const Header = () => {
                   </select>
                 </div>
               )}
+              
               <Button asChild className="h-10 px-4" variant="outline">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
+              
               <Button onClick={handleLogout} variant="ghost" size="icon" className="h-10 w-10 text-red-600 hover:text-red-700 hover:bg-red-50">
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -117,6 +122,7 @@ const Header = () => {
             </>
           )}
         </div>
+
       </div>
     </nav>
   );

@@ -5,35 +5,32 @@ import { cookies } from "next/headers";
 export async function GET() {
   try {
     const userIdCookie = (await cookies()).get("userId");
-
     if (!userIdCookie || !userIdCookie.value) {
-      return NextResponse.json({ user: null });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const userId = parseInt(userIdCookie.value, 10);
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        roles: true,
-        // wallet: true,
-        // store: true
-      }
+      where: { id: userId }
     });
 
-    if (!user) {
-      return NextResponse.json({ user: null });
+    if (!user || user.activeRole !== "BUYER") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
+    const orders = await prisma.order.findMany({
+      where: { buyerId: userId }
+    });
+
+    const totalSpending = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter((o) => o.status === "Pesanan Selesai").length;
+
     return NextResponse.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roles: user.roles.map(r => r.name),
-        activeRole: user.activeRole,
-        // walletBalance: user.wallet?.balance || 0,
-        // hasStore: !!user.store
+      summary: {
+        totalSpending,
+        totalOrders,
+        completedOrders
       }
     });
   } catch (error) {
