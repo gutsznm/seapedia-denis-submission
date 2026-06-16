@@ -27,6 +27,7 @@ import BuyerCart from "@/components/buyer-cart";
 import BuyerCheckout from "@/components/buyer-checkout";
 import BuyerOrders from "@/components/buyer-orders";
 import BuyerReports from "@/components/buyer-reports";
+import DriverDashboard from "@/components/driver-dashboard";
 
 interface UserSession {
   id: number;
@@ -288,25 +289,8 @@ export default function Dashboard() {
               )}
 
               {session.activeRole === "DRIVER" && (
-                <div className="grid md:grid-cols-3 gap-6">
-                  <Card className="shadow-xs bg-white dark:bg-slate-900">
-                    <CardHeader>
-                      <CardTitle className="text-base font-bold">Driver Earnings</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-extrabold text-blue-600">IDR 0</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-xs md:col-span-2 bg-white dark:bg-slate-900">
-                    <CardHeader>
-                      <CardTitle className="text-base font-bold">Driver Panel Placeholder</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Job listings, job delivery status and earning tracker will be active in Level 5.
-                      </p>
-                    </CardContent>
-                  </Card>
+                <div className="pt-2">
+                  <DriverDashboard />
                 </div>
               )}
 
