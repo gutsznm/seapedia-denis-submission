@@ -28,6 +28,7 @@ import BuyerCheckout from "@/components/buyer-checkout";
 import BuyerOrders from "@/components/buyer-orders";
 import BuyerReports from "@/components/buyer-reports";
 import DriverDashboard from "@/components/driver-dashboard";
+import AdminDashboard from "@/components/admin-dashboard";
 
 interface UserSession {
   id: number;
@@ -295,17 +296,8 @@ export default function Dashboard() {
               )}
 
               {session.activeRole === "ADMIN" && (
-                <div className="grid md:grid-cols-3 gap-6">
-                  <Card className="shadow-xs md:col-span-3 bg-white dark:bg-slate-900">
-                    <CardHeader>
-                      <CardTitle className="text-base font-bold">Admin Panel Placeholder</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        System is under maintenance.
-                      </p>
-                    </CardContent>
-                  </Card>
+                <div className="pt-2">
+                  <AdminDashboard />
                 </div>
               )}
             </>
